@@ -3,6 +3,7 @@ import Prompt from "@models/prompt";
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import mongoose from "mongoose";
+import { authOptions } from "@app/api/auth/[...nextauth]/route";
 
 interface Params {
 	id: string;
@@ -14,7 +15,7 @@ export async function POST(
 	{ params }: { params: Promise<Params> },
 ) {
 	try {
-		const session = await getServerSession();
+		const session = await getServerSession(authOptions);
 		if (!session?.user) {
 			return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 		}

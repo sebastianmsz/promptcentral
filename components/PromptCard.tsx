@@ -336,13 +336,14 @@ const PromptCard: React.FC<Props> = ({
 						<button
 							onClick={handleLike}
 							className="flex items-center gap-1 transition-colors hover:text-red-500"
+							aria-label={hasLiked ? "Unlike this prompt" : "Like this prompt"}
 						>
 							<Heart
 								className={`h-4 w-4 ${hasLiked ? "fill-red-500 text-red-500" : ""}`}
 							/>
 							<span>{likes.length}</span>
 						</button>
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-1" aria-label={`${views} views`}>
 							<Eye className="h-4 w-4" />
 							<span>{views}</span>
 						</div>

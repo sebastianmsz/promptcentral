@@ -1,10 +1,10 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import User from "@models/user";
 import { connectToDb } from "@utils/database";
 import { Session, Profile } from "next-auth";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
 	session: {
 		strategy: "jwt",
 		maxAge: 30 * 24 * 60 * 60,
@@ -65,6 +65,8 @@ const handler = NextAuth({
 			}
 		},
 	},
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
