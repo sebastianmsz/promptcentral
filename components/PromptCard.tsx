@@ -8,6 +8,7 @@ import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import JsonLd from "@components/JsonLd";
+import { Heart, Eye } from "lucide-react";
 
 const PromptCard: React.FC<Props> = ({
 	post,
@@ -20,9 +21,15 @@ const PromptCard: React.FC<Props> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [copied, setCopied] = useState("");
 	const [deleting, setDeleting] = useState(false);
+	const [likes, setLikes] = useState<string[]>(post.likes || []);
+	const [views, setViews] = useState<number>(post.views || 0);
+	const [hasLiked, setHasLiked] = useState<boolean>(
+		post.likes?.includes(session?.user?.id || "") || false
+	);
 	const router = useRouter();
 	const modalRef = useRef<HTMLDivElement>(null);
 	const backdropRef = useRef<HTMLDivElement>(null);
+	const hasTrackedView = useRef(false);
 
 	const isCurrentUserPost = session?.user?.id === post.creator?._id;
 
@@ -37,6 +44,62 @@ const PromptCard: React.FC<Props> = ({
 			setCopied("");
 		}, 2000);
 	};
+
+	const handleLike = async (event: React.MouseEvent) => {
+		event.stopPropagation();
+		
+		if (!session?.user) {
+			signIn("google");
+			return;
+		}
+
+		// Optimistic update
+		const newHasLiked = !hasLiked;
+		const newLikes = newHasLiked
+			? [...likes, session.user.id]
+			: likes.filter((id) => id !== session.user.id);
+
+		setHasLiked(newHasLiked);
+		setLikes(newLikes);
+
+		try {
+			const response = await fetch(`/api/prompt/${post._id}/like`, {
+				method: "POST",
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to toggle like");
+			}
+
+			const data = await response.json();
+			setLikes(data.likes);
+			setHasLiked(data.hasLiked);
+		} catch (error) {
+			console.error("Error toggling like:", error);
+			// Revert on error
+			setHasLiked(!newHasLiked);
+			setLikes(likes);
+		}
+	};
+
+	const trackView = useCallback(async () => {
+		if (!post._id || hasTrackedView.current) return;
+		
+		hasTrackedView.current = true;
+		
+		try {
+			const response = await fetch(`/api/prompt/${post._id}/view`, {
+				method: "POST",
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setViews(data.views);
+			}
+		} catch (error) {
+			console.error("Error tracking view:", error);
+		}
+	}, [post._id]);
 
 	const handleDeleteClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
@@ -84,6 +147,7 @@ const PromptCard: React.FC<Props> = ({
 	const handleMaximize = (event: React.MouseEvent) => {
 		event.stopPropagation();
 		setIsMaximized(true);
+		trackView();
 	};
 
 	const handleCloseMaximize = () => {
@@ -106,6 +170,10 @@ const PromptCard: React.FC<Props> = ({
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
 	}, [isMaximized, handleClickOutside]);
+
+	useEffect(() => {
+		setHasLiked(post.likes?.includes(session?.user?.id || "") || false);
+	}, [post.likes, session?.user?.id]);
 
 	const onTagClick = useCallback(
 		(tag: string, isModal: boolean) => {
@@ -256,13 +324,30 @@ const PromptCard: React.FC<Props> = ({
 			</div>
 
 			<div className="mt-4 space-y-4">
-				<div className="flex flex-wrap items-center gap-2">
-					{renderTags(isModal)}
-					{hasMoreTags && !isModal && (
-						<span className="text-xs text-gray-500">
-							+{post.tag.length - maxTagsToDisplay}
-						</span>
-					)}
+				<div className="flex items-center justify-between gap-2">
+					<div className="flex flex-wrap items-center gap-2">
+						{renderTags(isModal)}
+						{hasMoreTags && !isModal && (
+							<span className="text-xs text-gray-500">
+								+{post.tag.length - maxTagsToDisplay}
+							</span>
+						)}
+					</div>
+					<div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+						<button
+							onClick={handleLike}
+							className="flex items-center gap-1 transition-colors hover:text-red-500"
+						>
+							<Heart
+								className={`h-4 w-4 ${hasLiked ? "fill-red-500 text-red-500" : ""}`}
+							/>
+							<span>{likes.length}</span>
+						</button>
+						<div className="flex items-center gap-1">
+							<Eye className="h-4 w-4" />
+							<span>{views}</span>
+						</div>
+					</div>
 				</div>
 				{renderButtons()}
 			</div>

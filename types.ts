@@ -23,6 +23,8 @@ export interface Post {
 	prompt: string;
 	tag: string[];
 	creator?: User | null;
+	views?: number;
+	likes?: string[];
 }
 
 export interface FeedProps {
