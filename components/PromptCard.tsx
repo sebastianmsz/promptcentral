@@ -87,7 +87,6 @@ const PromptCard: React.FC<Props> = ({
 	const trackView = useCallback(async () => {
 		if (!post._id || viewTrackedRef.current) return;
 
-		viewTrackedRef.current = true;
 		try {
 			const response = await fetch(`/api/prompt/${post._id}/view`, {
 				method: "POST",
@@ -96,6 +95,7 @@ const PromptCard: React.FC<Props> = ({
 			if (response.ok) {
 				const data = await response.json();
 				setViews(data.views);
+				viewTrackedRef.current = true;
 			}
 		} catch (error) {
 			console.error("Error tracking view:", error);

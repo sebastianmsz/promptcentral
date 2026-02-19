@@ -32,7 +32,13 @@ export async function POST(
 			);
 		}
 
-		const prompt = await Prompt.findById(id);
+		const userId = (session.user as SessionUser).id;
+
+		const prompt = await Prompt.findByIdAndUpdate(
+			id,
+			{ $addToSet: { likes: userId } },
+			{ new: true },
+		);
 
 		if (!prompt) {
 			return NextResponse.json(
@@ -40,17 +46,6 @@ export async function POST(
 				{ status: 404 },
 			);
 		}
-
-		const userId = (session.user as SessionUser).id;
-		const likes = prompt.likes || [];
-
-		if (likes.includes(userId)) {
-			return NextResponse.json({ message: "Already liked" }, { status: 400 });
-		}
-
-		likes.push(userId);
-		prompt.likes = likes;
-		await prompt.save();
 
 		return NextResponse.json(
 			{ message: "Liked successfully", likes: prompt.likes },
@@ -91,7 +86,13 @@ export async function DELETE(
 			);
 		}
 
-		const prompt = await Prompt.findById(id);
+		const userId = (session.user as SessionUser).id;
+
+		const prompt = await Prompt.findByIdAndUpdate(
+			id,
+			{ $pull: { likes: userId } },
+			{ new: true },
+		);
 
 		if (!prompt) {
 			return NextResponse.json(
@@ -99,18 +100,6 @@ export async function DELETE(
 				{ status: 404 },
 			);
 		}
-
-		const userId = (session.user as SessionUser).id;
-		const likes = prompt.likes || [];
-
-		const index = likes.indexOf(userId);
-		if (index === -1) {
-			return NextResponse.json({ message: "Not liked yet" }, { status: 400 });
-		}
-
-		likes.splice(index, 1);
-		prompt.likes = likes;
-		await prompt.save();
 
 		return NextResponse.json(
 			{ message: "Unliked successfully", likes: prompt.likes },
