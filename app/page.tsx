@@ -17,59 +17,59 @@ const HeroSection = () => (
 );
 
 export const generateMetadata = async () => {
-  try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/prompt`);
-    const { pagination } = await response.json();
-    const totalPrompts = pagination?.total || 0;
+	try {
+		const response = await fetch(`${process.env.NEXTAUTH_URL}/api/prompt`);
+		const { pagination } = await response.json();
+		const totalPrompts = pagination?.total || 0;
 
-    return {
-      title: 'Explore AI Prompts',
-      description: `Join our community of ${totalPrompts}+ AI prompts. Share, discover, and learn from prompt engineers worldwide.`,
-      openGraph: {
-        title: 'Explore AI Prompts | Prompteria',
-        description: `Browse our collection of ${totalPrompts}+ AI prompts shared by the community`,
-      },
-    };
-  } catch {
-    return {
-      title: 'Explore AI Prompts',
-      description: 'Discover and share AI prompts with a global community of prompt engineers.',
-    };
-  }
+		return {
+			title: "Explore AI Prompts",
+			description: `Join our community of ${totalPrompts}+ AI prompts. Share, discover, and learn from prompt engineers worldwide.`,
+			openGraph: {
+				title: "Explore AI Prompts | Prompteria",
+				description: `Browse our collection of ${totalPrompts}+ AI prompts shared by the community`,
+			},
+		};
+	} catch {
+		return {
+			title: "Explore AI Prompts",
+			description:
+				"Discover and share AI prompts with a global community of prompt engineers.",
+		};
+	}
 };
 
 const Home = () => {
-  const websiteStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Prompteria",
-    "url": process.env.NEXTAUTH_URL,
-    "description": "Discover and share powerful AI prompts with a global community",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": `${process.env.NEXTAUTH_URL}/?search={search_term_string}`
-      },
-      "query-input": "required name=search_term_string"
-    }
-  };
+	const websiteStructuredData = {
+		"@context": "https://schema.org",
+		"@type": "WebSite",
+		name: "Prompteria",
+		url: process.env.NEXTAUTH_URL,
+		description:
+			"Discover and share powerful AI prompts with a global community",
+		potentialAction: {
+			"@type": "SearchAction",
+			target: {
+				"@type": "EntryPoint",
+				urlTemplate: `${process.env.NEXTAUTH_URL}/?search={search_term_string}`,
+			},
+			"query-input": "required name=search_term_string",
+		},
+	};
 
-  const organizationStructuredData = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Prompteria",
-    "url": process.env.NEXTAUTH_URL,
-    "logo": `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`,
-    "sameAs": [
-      "https://github.com/sebastianmsz/promptcentral"
-    ]
-  };
+	const organizationStructuredData = {
+		"@context": "https://schema.org",
+		"@type": "Organization",
+		name: "Prompteria",
+		url: process.env.NEXTAUTH_URL,
+		logo: `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`,
+		sameAs: ["https://github.com/sebastianmsz/promptcentral"],
+	};
 
 	return (
 		<main className="flex min-h-screen flex-col items-center px-4 sm:px-8">
-      <JsonLd data={websiteStructuredData} />
-      <JsonLd data={organizationStructuredData} />
+			<JsonLd data={websiteStructuredData} />
+			<JsonLd data={organizationStructuredData} />
 			<HeroSection />
 			<Suspense fallback={<Spinner />}>
 				<Feed />

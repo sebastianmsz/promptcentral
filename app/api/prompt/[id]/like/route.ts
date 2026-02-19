@@ -2,8 +2,13 @@ import { connectToDb } from "@utils/database";
 import Prompt from "@models/prompt";
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth/next";
+import { User } from "next-auth";
 
 interface Params {
+	id: string;
+}
+
+interface SessionUser extends User {
 	id: string;
 }
 
@@ -14,10 +19,7 @@ export async function POST(
 	try {
 		const session = await getServerSession();
 		if (!session?.user) {
-			return NextResponse.json(
-				{ message: "Unauthorized" },
-				{ status: 401 },
-			);
+			return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 		}
 
 		const { id } = await params;
@@ -39,14 +41,11 @@ export async function POST(
 			);
 		}
 
-		const userId = (session.user as any).id;
+		const userId = (session.user as SessionUser).id;
 		const likes = prompt.likes || [];
-		
+
 		if (likes.includes(userId)) {
-			return NextResponse.json(
-				{ message: "Already liked" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ message: "Already liked" }, { status: 400 });
 		}
 
 		likes.push(userId);
@@ -79,10 +78,7 @@ export async function DELETE(
 	try {
 		const session = await getServerSession();
 		if (!session?.user) {
-			return NextResponse.json(
-				{ message: "Unauthorized" },
-				{ status: 401 },
-			);
+			return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 		}
 
 		const { id } = await params;
@@ -104,15 +100,12 @@ export async function DELETE(
 			);
 		}
 
-		const userId = (session.user as any).id;
+		const userId = (session.user as SessionUser).id;
 		const likes = prompt.likes || [];
-		
+
 		const index = likes.indexOf(userId);
 		if (index === -1) {
-			return NextResponse.json(
-				{ message: "Not liked yet" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ message: "Not liked yet" }, { status: 400 });
 		}
 
 		likes.splice(index, 1);

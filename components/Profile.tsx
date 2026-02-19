@@ -24,17 +24,17 @@ const Profile: React.FC<ProfileProps> = ({
 	const profileStructuredData = {
 		"@context": "https://schema.org",
 		"@type": "ProfilePage",
-		"name": `${name}'s Profile`,
-		"description": desc,
-		"author": {
+		name: `${name}'s Profile`,
+		description: desc,
+		author: {
 			"@type": "Person",
-			"name": name
+			name: name,
 		},
-		"interactionStatistic": {
+		interactionStatistic: {
 			"@type": "InteractionCounter",
-			"interactionType": "https://schema.org/WriteAction",
-			"userInteractionCount": data.length
-		}
+			interactionType: "https://schema.org/WriteAction",
+			userInteractionCount: data.length,
+		},
 	};
 
 	const memoizedPromptCards = useMemo(

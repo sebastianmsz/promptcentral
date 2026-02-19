@@ -46,7 +46,7 @@ const PromptCard: React.FC<Props> = ({
 
 	const handleLike = async (event: React.MouseEvent) => {
 		event.stopPropagation();
-		
+
 		if (!session?.user) {
 			signIn("google");
 			return;
@@ -56,11 +56,11 @@ const PromptCard: React.FC<Props> = ({
 
 		setIsLiking(true);
 		const previousLikes = [...likes];
-		
+
 		try {
 			// Optimistic update
 			if (isLiked) {
-				setLikes(likes.filter(id => id !== session.user.id));
+				setLikes(likes.filter((id) => id !== session.user.id));
 			} else {
 				setLikes([...likes, session.user.id]);
 			}
@@ -86,7 +86,7 @@ const PromptCard: React.FC<Props> = ({
 
 	const trackView = useCallback(async () => {
 		if (!post._id || viewTrackedRef.current) return;
-		
+
 		viewTrackedRef.current = true;
 		try {
 			const response = await fetch(`/api/prompt/${post._id}/view`, {
@@ -185,23 +185,25 @@ const PromptCard: React.FC<Props> = ({
 	const promptStructuredData = {
 		"@context": "https://schema.org",
 		"@type": "Article",
-		"headline": `AI Prompt by ${post.creator?.name}`,
-		"author": {
+		headline: `AI Prompt by ${post.creator?.name}`,
+		author: {
 			"@type": "Person",
-			"name": post.creator?.name,
-			"image": post.creator?.image
+			name: post.creator?.name,
+			image: post.creator?.image,
 		},
-		"description": post.prompt,
-		"keywords": post.tag.join(", "),
-		"datePublished": post._id ? new Date(parseInt(post._id.substring(0, 8), 16) * 1000).toISOString() : new Date().toISOString(),
-		"publisher": {
+		description: post.prompt,
+		keywords: post.tag.join(", "),
+		datePublished: post._id
+			? new Date(parseInt(post._id.substring(0, 8), 16) * 1000).toISOString()
+			: new Date().toISOString(),
+		publisher: {
 			"@type": "Organization",
-			"name": "Prompteria",
-			"logo": {
+			name: "Prompteria",
+			logo: {
 				"@type": "ImageObject",
-				"url": `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`
-			}
-		}
+				url: `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`,
+			},
+		},
 	};
 
 	const renderUserInfo = () => (
@@ -329,7 +331,7 @@ const PromptCard: React.FC<Props> = ({
 						</span>
 					)}
 				</div>
-				
+
 				<div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
 					<button
 						onClick={handleLike}
@@ -343,13 +345,13 @@ const PromptCard: React.FC<Props> = ({
 						/>
 						<span className="font-medium">{likes.length}</span>
 					</button>
-					
+
 					<div className="flex items-center gap-1.5">
 						<Eye className="h-5 w-5" />
 						<span className="font-medium">{views}</span>
 					</div>
 				</div>
-				
+
 				{renderButtons()}
 			</div>
 		</div>

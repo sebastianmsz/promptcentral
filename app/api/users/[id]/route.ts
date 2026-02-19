@@ -9,18 +9,15 @@ interface Params {
 
 export async function GET(
 	request: NextRequest,
-    { params }: { params: Promise<Params> }
+	{ params }: { params: Promise<Params> },
 ) {
 	try {
 		const { id } = await params;
 		await connectToDb();
 
-		if(!id){
-            return NextResponse.json(
-				{ message: "Missing user id" },
-				{ status: 400 },
-			);
-        }
+		if (!id) {
+			return NextResponse.json({ message: "Missing user id" }, { status: 400 });
+		}
 
 		const user = await User.findById(id);
 		if (!user) {

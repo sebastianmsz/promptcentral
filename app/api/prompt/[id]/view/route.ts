@@ -24,7 +24,7 @@ export async function POST(
 		const prompt = await Prompt.findByIdAndUpdate(
 			id,
 			{ $inc: { views: 1 } },
-			{ new: true }
+			{ new: true },
 		);
 
 		if (!prompt) {

@@ -8,10 +8,10 @@ import { useParams } from "next/navigation";
 import usePromptList from "@app/hooks/usePromptList";
 
 interface UserProfileClientProps {
-  initialUser: {
-    name: string;
-    image?: string;
-  } | null;
+	initialUser: {
+		name: string;
+		image?: string;
+	} | null;
 }
 
 const UserProfileClient = ({ initialUser }: UserProfileClientProps) => {
