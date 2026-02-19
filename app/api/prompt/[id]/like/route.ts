@@ -39,7 +39,14 @@ export async function POST(
 			);
 		}
 
-		const userId = (session.user as { id: string }).id;
+		const userId = session.user.id;
+		if (!userId) {
+			return NextResponse.json(
+				{ message: "User ID not found in session" },
+				{ status: 401 },
+			);
+		}
+
 		const likes = prompt.likes || [];
 		const hasLiked = likes.some(
 			(like: mongoose.Types.ObjectId) => like.toString() === userId,
