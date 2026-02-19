@@ -49,7 +49,7 @@ const Profile: React.FC<ProfileProps> = ({
 					onDelete={onDelete}
 				/>
 			)),
-		[data, isCurrentUserProfile, isProfilePage],
+		[data, isCurrentUserProfile, isProfilePage, handleTagClick, onDelete],
 	);
 
 	return (

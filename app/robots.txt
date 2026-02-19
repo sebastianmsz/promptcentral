@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://promptcentral.vercel.app/sitemap.xml
+Sitemap: https://prompteria.com/sitemap.xml
 
 # Prevent crawling of authentication pages
 Disallow: /api/auth/*

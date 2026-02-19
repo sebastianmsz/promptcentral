@@ -32,7 +32,7 @@ const logger = pino(
 );
 
 const childLogger = logger.child({
-	service: "promptcentral-api",
+	service: "prompteria-api",
 	environment: NODE_ENV,
 });
 
@@ -77,7 +77,7 @@ export const connectToDb = async () => {
 			}/${MAX_RETRIES})...`,
 		);
 		await mongoose.connect(mongoUri, {
-			dbName: "promptcentral",
+			dbName: "prompteria",
 			maxPoolSize: 10,
 			serverSelectionTimeoutMS: 5000,
 			socketTimeoutMS: 45000,

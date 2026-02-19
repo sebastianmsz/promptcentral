@@ -7,7 +7,7 @@ const HeroSection = () => (
 	<div className="mx-auto max-w-7xl space-y-6 py-12 text-center">
 		<h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
 			Master AI Prompting with{" "}
-			<span className="red_gradient mt-2 block">Prompt Central</span>
+			<span className="red_gradient mt-2 block">Prompteria</span>
 		</h1>
 		<p className="mx-auto max-w-2xl text-xl text-gray-600">
 			Your collaborative hub for sharing powerful AI prompts that deliver
@@ -26,11 +26,11 @@ export const generateMetadata = async () => {
       title: 'Explore AI Prompts',
       description: `Join our community of ${totalPrompts}+ AI prompts. Share, discover, and learn from prompt engineers worldwide.`,
       openGraph: {
-        title: 'Explore AI Prompts | Prompt Central',
+        title: 'Explore AI Prompts | Prompteria',
         description: `Browse our collection of ${totalPrompts}+ AI prompts shared by the community`,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Explore AI Prompts',
       description: 'Discover and share AI prompts with a global community of prompt engineers.',
@@ -42,7 +42,7 @@ const Home = () => {
   const websiteStructuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Prompt Central",
+    "name": "Prompteria",
     "url": process.env.NEXTAUTH_URL,
     "description": "Discover and share powerful AI prompts with a global community",
     "potentialAction": {
@@ -58,7 +58,7 @@ const Home = () => {
   const organizationStructuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "Prompt Central",
+    "name": "Prompteria",
     "url": process.env.NEXTAUTH_URL,
     "logo": `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`,
     "sameAs": [

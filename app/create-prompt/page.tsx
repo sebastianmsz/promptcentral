@@ -8,15 +8,6 @@ import Form from "@components/Form";
 import { Post } from "@types";
 import { Session } from "next-auth";
 
-export const metadata = {
-  title: 'Create Prompt',
-  description: 'Share your AI prompts with the community. Create and publish your prompt engineering insights.',
-  openGraph: {
-    title: 'Create New Prompt | Prompt Central',
-    description: 'Share your AI prompts with the community',
-  },
-};
-
 type StatusType = "loading" | "authenticated" | "unauthenticated";
 
 const CreatePrompt = () => {

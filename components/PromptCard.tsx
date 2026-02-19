@@ -131,7 +131,7 @@ const PromptCard: React.FC<Props> = ({
 		"datePublished": post._id ? new Date(parseInt(post._id.substring(0, 8), 16) * 1000).toISOString() : new Date().toISOString(),
 		"publisher": {
 			"@type": "Organization",
-			"name": "Prompt Central",
+			"name": "Prompteria",
 			"logo": {
 				"@type": "ImageObject",
 				"url": `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`

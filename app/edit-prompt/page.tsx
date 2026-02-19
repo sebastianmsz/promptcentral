@@ -77,6 +77,7 @@ const EditPrompt = () => {
 
 	useEffect(() => {
 		fetchPromptData();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [promptId]);
 
 	const updatePrompt = async (e: FormEvent) => {

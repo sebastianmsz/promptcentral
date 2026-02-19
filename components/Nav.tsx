@@ -66,11 +66,11 @@ const Nav = () => {
 			<Link href="/" className="flex-center flex gap-2">
 				<Image
 					src="/assets/img/logo.svg"
-					alt="Prompt Central Logo"
+					alt="Prompteria Logo"
 					width={30}
 					height={30}
 				/>
-				<p className="logo_text">Prompt Central</p>
+				<p className="logo_text">Prompteria</p>
 			</Link>
 
 			<div className="hidden gap-3 sm:flex">
