@@ -13,6 +13,14 @@ const PromptSchema = new Schema({
 		type: [String],
 		required: [true, "Tag is required"],
 	},
+	likes: {
+		type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+		default: [],
+	},
+	views: {
+		type: Number,
+		default: 0,
+	},
 });
 
 const Prompt = models.Prompt || model("Prompt", PromptSchema);

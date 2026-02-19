@@ -8,6 +8,7 @@ import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import JsonLd from "@components/JsonLd";
+import { Heart, Eye } from "lucide-react";
 
 const PromptCard: React.FC<Props> = ({
 	post,
@@ -20,11 +21,16 @@ const PromptCard: React.FC<Props> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [copied, setCopied] = useState("");
 	const [deleting, setDeleting] = useState(false);
+	const [likes, setLikes] = useState<string[]>(post.likes || []);
+	const [views, setViews] = useState<number>(post.views || 0);
+	const [isLiking, setIsLiking] = useState(false);
 	const router = useRouter();
 	const modalRef = useRef<HTMLDivElement>(null);
 	const backdropRef = useRef<HTMLDivElement>(null);
+	const viewTrackedRef = useRef(false);
 
 	const isCurrentUserPost = session?.user?.id === post.creator?._id;
+	const isLiked = session?.user?.id ? likes.includes(session.user.id) : false;
 
 	const maxTagsToDisplay = 3;
 	const tagsToDisplay = post.tag.slice(0, maxTagsToDisplay);
@@ -37,6 +43,64 @@ const PromptCard: React.FC<Props> = ({
 			setCopied("");
 		}, 2000);
 	};
+
+	const handleLike = async (event: React.MouseEvent) => {
+		event.stopPropagation();
+		
+		if (!session?.user) {
+			signIn("google");
+			return;
+		}
+
+		if (isLiking || !post._id) return;
+
+		setIsLiking(true);
+		const previousLikes = [...likes];
+		
+		try {
+			// Optimistic update
+			if (isLiked) {
+				setLikes(likes.filter(id => id !== session.user.id));
+			} else {
+				setLikes([...likes, session.user.id]);
+			}
+
+			const response = await fetch(`/api/prompt/${post._id}/like`, {
+				method: isLiked ? "DELETE" : "POST",
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to update like");
+			}
+
+			const data = await response.json();
+			setLikes(data.likes);
+		} catch (error) {
+			console.error("Error updating like:", error);
+			// Revert on error
+			setLikes(previousLikes);
+		} finally {
+			setIsLiking(false);
+		}
+	};
+
+	const trackView = useCallback(async () => {
+		if (!post._id || viewTrackedRef.current) return;
+		
+		viewTrackedRef.current = true;
+		try {
+			const response = await fetch(`/api/prompt/${post._id}/view`, {
+				method: "POST",
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setViews(data.views);
+			}
+		} catch (error) {
+			console.error("Error tracking view:", error);
+		}
+	}, [post._id]);
 
 	const handleDeleteClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
@@ -84,6 +148,7 @@ const PromptCard: React.FC<Props> = ({
 	const handleMaximize = (event: React.MouseEvent) => {
 		event.stopPropagation();
 		setIsMaximized(true);
+		trackView();
 	};
 
 	const handleCloseMaximize = () => {
@@ -264,6 +329,27 @@ const PromptCard: React.FC<Props> = ({
 						</span>
 					)}
 				</div>
+				
+				<div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+					<button
+						onClick={handleLike}
+						disabled={isLiking}
+						className="flex items-center gap-1.5 transition-colors hover:text-red-500 disabled:opacity-50"
+					>
+						<Heart
+							className={`h-5 w-5 transition-colors ${
+								isLiked ? "fill-red-500 text-red-500" : ""
+							}`}
+						/>
+						<span className="font-medium">{likes.length}</span>
+					</button>
+					
+					<div className="flex items-center gap-1.5">
+						<Eye className="h-5 w-5" />
+						<span className="font-medium">{views}</span>
+					</div>
+				</div>
+				
 				{renderButtons()}
 			</div>
 		</div>
