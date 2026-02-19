@@ -58,7 +58,7 @@ export async function POST(
 
 		return NextResponse.json(
 			{
-				likes: prompt.likes,
+				likes: prompt.likes.map((id: mongoose.Types.ObjectId) => id.toString()),
 				likesCount: prompt.likes.length,
 				hasLiked: !hasLiked,
 			},

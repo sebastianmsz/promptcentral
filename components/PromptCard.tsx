@@ -53,6 +53,10 @@ const PromptCard: React.FC<Props> = ({
 			return;
 		}
 
+		// Store previous state for potential revert
+		const prevHasLiked = hasLiked;
+		const prevLikes = likes;
+
 		// Optimistic update
 		const newHasLiked = !hasLiked;
 		const newLikes = newHasLiked
@@ -76,16 +80,14 @@ const PromptCard: React.FC<Props> = ({
 			setHasLiked(data.hasLiked);
 		} catch (error) {
 			console.error("Error toggling like:", error);
-			// Revert on error
-			setHasLiked(!newHasLiked);
-			setLikes(likes);
+			// Revert to previous state on error
+			setHasLiked(prevHasLiked);
+			setLikes(prevLikes);
 		}
 	};
 
 	const trackView = useCallback(async () => {
 		if (!post._id || hasTrackedView.current) return;
-		
-		hasTrackedView.current = true;
 		
 		try {
 			const response = await fetch(`/api/prompt/${post._id}/view`, {
@@ -95,6 +97,7 @@ const PromptCard: React.FC<Props> = ({
 			if (response.ok) {
 				const data = await response.json();
 				setViews(data.views);
+				hasTrackedView.current = true;
 			}
 		} catch (error) {
 			console.error("Error tracking view:", error);
@@ -170,10 +173,6 @@ const PromptCard: React.FC<Props> = ({
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
 	}, [isMaximized, handleClickOutside]);
-
-	useEffect(() => {
-		setHasLiked(post.likes?.includes(session?.user?.id || "") || false);
-	}, [post.likes, session?.user?.id]);
 
 	const onTagClick = useCallback(
 		(tag: string, isModal: boolean) => {
