@@ -23,6 +23,8 @@ export interface Post {
 	prompt: string;
 	tag: string[];
 	creator?: User | null;
+	likes?: string[];
+	views?: number;
 }
 
 export interface FeedProps {
@@ -67,6 +69,13 @@ export interface ProfileProps {
 	name: string;
 	desc: string;
 	data: Post[];
+	likedData?: Post[];
+	page?: number;
+	totalPages?: number;
+	onLoadMore?: () => void;
+	likedPage?: number;
+	likedTotalPages?: number;
+	onLoadMoreLiked?: () => void;
 	isCurrentUserProfile: boolean;
 	isProfilePage: boolean;
 	onDelete?: (postId: string) => void;

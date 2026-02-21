@@ -8,10 +8,10 @@ import { useParams } from "next/navigation";
 import usePromptList from "@app/hooks/usePromptList";
 
 interface UserProfileClientProps {
-  initialUser: {
-    name: string;
-    image?: string;
-  } | null;
+	initialUser: {
+		name: string;
+		image?: string;
+	} | null;
 }
 
 const UserProfileClient = ({ initialUser }: UserProfileClientProps) => {
@@ -29,11 +29,24 @@ const UserProfileClient = ({ initialUser }: UserProfileClientProps) => {
 		refreshData,
 	} = usePromptList<Post>({ apiEndpoint: `/api/users/${id}/posts` });
 
+	const {
+		data: initialLikedPosts,
+		loading: likedLoading,
+		page: likedPage,
+		totalPages: likedTotalPages,
+		handleLoadMore: handleLoadMoreLiked,
+	} = usePromptList<Post>({ apiEndpoint: `/api/users/${id}/likes` });
+
 	const [posts, setPosts] = useState<Post[]>(initialPosts);
+	const [likedPosts, setLikedPosts] = useState<Post[]>(initialLikedPosts);
 
 	useEffect(() => {
 		setPosts(initialPosts);
 	}, [initialPosts]);
+
+	useEffect(() => {
+		setLikedPosts(initialLikedPosts);
+	}, [initialLikedPosts]);
 
 	const fetchUserData = useCallback(async () => {
 		try {
@@ -82,17 +95,19 @@ const UserProfileClient = ({ initialUser }: UserProfileClientProps) => {
 					name={user.name}
 					desc={profileDescription}
 					data={posts}
+					likedData={likedPosts}
+					page={page}
+					totalPages={totalPages}
+					onLoadMore={handleLoadMore}
+					likedPage={likedPage}
+					likedTotalPages={likedTotalPages}
+					onLoadMoreLiked={handleLoadMoreLiked}
 					isCurrentUserProfile={false}
 					isProfilePage={true}
 					onDelete={handleDelete}
 				/>
 			)}
-			{loading && <Spinner />}
-			{page < totalPages && !loading && (
-				<button onClick={handleLoadMore} className="black_btn mb-4">
-					Load More
-				</button>
-			)}
+			{(loading || likedLoading) && <Spinner />}
 		</div>
 	);
 };

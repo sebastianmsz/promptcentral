@@ -8,6 +8,7 @@ import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import JsonLd from "@components/JsonLd";
+import { Heart, Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 const PromptCard: React.FC<Props> = ({
 	post,
@@ -20,11 +21,18 @@ const PromptCard: React.FC<Props> = ({
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 	const [copied, setCopied] = useState("");
 	const [deleting, setDeleting] = useState(false);
+	const [likes, setLikes] = useState<string[]>(post.likes || []);
+	const [views, setViews] = useState<number>(post.views || 0);
+	const [isLiking, setIsLiking] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 	const router = useRouter();
 	const modalRef = useRef<HTMLDivElement>(null);
 	const backdropRef = useRef<HTMLDivElement>(null);
+	const viewTrackedRef = useRef(false);
 
 	const isCurrentUserPost = session?.user?.id === post.creator?._id;
+	const isLiked = session?.user?.id ? likes.includes(session.user.id) : false;
 
 	const maxTagsToDisplay = 3;
 	const tagsToDisplay = post.tag.slice(0, maxTagsToDisplay);
@@ -37,6 +45,64 @@ const PromptCard: React.FC<Props> = ({
 			setCopied("");
 		}, 2000);
 	};
+
+	const handleLike = async (event: React.MouseEvent) => {
+		event.stopPropagation();
+
+		if (!session?.user) {
+			signIn("google");
+			return;
+		}
+
+		if (isLiking || !post._id) return;
+
+		setIsLiking(true);
+		const previousLikes = [...likes];
+
+		try {
+			// Optimistic update
+			if (isLiked) {
+				setLikes(likes.filter((id) => id !== session.user.id));
+			} else {
+				setLikes([...likes, session.user.id]);
+			}
+
+			const response = await fetch(`/api/prompt/${post._id}/like`, {
+				method: isLiked ? "DELETE" : "POST",
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to update like");
+			}
+
+			const data = await response.json();
+			setLikes(data.likes);
+		} catch (error) {
+			console.error("Error updating like:", error);
+			// Revert on error
+			setLikes(previousLikes);
+		} finally {
+			setIsLiking(false);
+		}
+	};
+
+	const trackView = useCallback(async () => {
+		if (!post._id || viewTrackedRef.current) return;
+
+		try {
+			const response = await fetch(`/api/prompt/${post._id}/view`, {
+				method: "POST",
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setViews(data.views);
+				viewTrackedRef.current = true;
+			}
+		} catch (error) {
+			console.error("Error tracking view:", error);
+		}
+	}, [post._id]);
 
 	const handleDeleteClick = (event: React.MouseEvent) => {
 		event.stopPropagation();
@@ -84,11 +150,26 @@ const PromptCard: React.FC<Props> = ({
 	const handleMaximize = (event: React.MouseEvent) => {
 		event.stopPropagation();
 		setIsMaximized(true);
+		trackView();
 	};
 
 	const handleCloseMaximize = () => {
 		setIsMaximized(false);
 	};
+
+	useEffect(() => {
+		const handleMenuClickOutside = (event: MouseEvent) => {
+			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+				setIsMenuOpen(false);
+			}
+		};
+		if (isMenuOpen) {
+			document.addEventListener("mousedown", handleMenuClickOutside);
+		}
+		return () => {
+			document.removeEventListener("mousedown", handleMenuClickOutside);
+		};
+	}, [isMenuOpen]);
 
 	const handleClickOutside = useCallback((event: MouseEvent) => {
 		if (backdropRef.current && backdropRef.current === event.target) {
@@ -120,23 +201,25 @@ const PromptCard: React.FC<Props> = ({
 	const promptStructuredData = {
 		"@context": "https://schema.org",
 		"@type": "Article",
-		"headline": `AI Prompt by ${post.creator?.name}`,
-		"author": {
+		headline: `AI Prompt by ${post.creator?.name}`,
+		author: {
 			"@type": "Person",
-			"name": post.creator?.name,
-			"image": post.creator?.image
+			name: post.creator?.name,
+			image: post.creator?.image,
 		},
-		"description": post.prompt,
-		"keywords": post.tag.join(", "),
-		"datePublished": post._id ? new Date(parseInt(post._id.substring(0, 8), 16) * 1000).toISOString() : new Date().toISOString(),
-		"publisher": {
+		description: post.prompt,
+		keywords: post.tag.join(", "),
+		datePublished: post._id
+			? new Date(parseInt(post._id.substring(0, 8), 16) * 1000).toISOString()
+			: new Date().toISOString(),
+		publisher: {
 			"@type": "Organization",
-			"name": "Prompteria",
-			"logo": {
+			name: "Prompteria",
+			logo: {
 				"@type": "ImageObject",
-				"url": `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`
-			}
-		}
+				url: `${process.env.NEXTAUTH_URL}/assets/img/logo.svg`,
+			},
+		},
 	};
 
 	const renderUserInfo = () => (
@@ -166,23 +249,45 @@ const PromptCard: React.FC<Props> = ({
 	const renderButtons = () =>
 		isProfilePage &&
 		isCurrentUserPost && (
-			<div className="mt-3 flex justify-end gap-2 sm:mt-4">
+			<div className="relative" ref={menuRef}>
 				<button
-					onClick={(event) => {
-						event.stopPropagation();
-						handleEdit();
+					onClick={(e) => {
+						e.stopPropagation();
+						setIsMenuOpen((prev) => !prev);
 					}}
-					className="rounded-md bg-blue-500 px-2 py-1 text-xs text-white sm:px-3 sm:text-sm"
+					className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+					aria-label="Options"
 				>
-					Edit
+					<MoreVertical size={18} />
 				</button>
-				<button
-					onClick={handleDeleteClick}
-					disabled={deleting}
-					className="rounded-md bg-red-500 px-2 py-1 text-xs text-white sm:px-3 sm:text-sm"
-				>
-					{deleting ? "Deleting..." : "Delete"}
-				</button>
+				{isMenuOpen && (
+					<div className="absolute right-0 top-9 z-50 min-w-[130px] overflow-hidden rounded-lg border border-gray-100 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								setIsMenuOpen(false);
+								handleEdit();
+							}}
+							className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+						>
+							<Pencil size={14} className="text-blue-500" />
+							Edit
+						</button>
+						<div className="mx-3 border-t border-gray-100 dark:border-gray-700" />
+						<button
+							onClick={(e) => {
+								e.stopPropagation();
+								setIsMenuOpen(false);
+								handleDeleteClick(e);
+							}}
+							disabled={deleting}
+							className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-900/20"
+						>
+							<Trash2 size={14} />
+							{deleting ? "Deleting…" : "Delete"}
+						</button>
+					</div>
+				)}
 			</div>
 		);
 
@@ -205,20 +310,7 @@ const PromptCard: React.FC<Props> = ({
 			<div className="flex items-start justify-between gap-4">
 				{renderUserInfo()}
 				<div className="flex items-center gap-2">
-					<button
-						onClick={(event) => {
-							event.stopPropagation();
-							handleCopy();
-						}}
-						className="group relative flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-					>
-						<Image
-							src={copied ? "/assets/icons/tick.svg" : "/assets/icons/copy.svg"}
-							alt="Copy icon"
-							width={18}
-							height={18}
-						/>
-					</button>
+					{!isModal && renderButtons()}
 					{isModal && (
 						<button
 							onClick={handleCloseMaximize}
@@ -248,7 +340,7 @@ const PromptCard: React.FC<Props> = ({
 					className={`font-satoshi text-sm text-gray-700 dark:text-gray-300 ${
 						isModal
 							? "max-h-[40vh] overflow-auto"
-							: "line-clamp-2 cursor-pointer"
+							: "line-clamp-2 cursor-pointer select-none"
 					}`}
 				>
 					{post.prompt}
@@ -264,7 +356,46 @@ const PromptCard: React.FC<Props> = ({
 						</span>
 					)}
 				</div>
-				{renderButtons()}
+
+				<div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+					<button
+						onClick={handleLike}
+						disabled={isLiking}
+						className="flex items-center gap-1.5 transition-colors hover:text-red-500 disabled:opacity-50"
+					>
+						<Heart
+							className={`h-5 w-5 transition-colors ${
+								isLiked ? "fill-red-500 text-red-500" : ""
+							}`}
+						/>
+						<span className="font-medium">{likes.length}</span>
+					</button>
+
+					<div className="flex items-center gap-1.5">
+						<Eye className="h-5 w-5" />
+						<span className="font-medium">{views}</span>
+					</div>
+
+					{isModal && (
+						<button
+							onClick={(event) => {
+								event.stopPropagation();
+								handleCopy();
+							}}
+							className="ml-auto flex items-center gap-1.5 transition-colors hover:text-blue-500"
+							title={copied ? "Copied!" : "Copy prompt"}
+						>
+							<Image
+								src={copied ? "/assets/icons/tick.svg" : "/assets/icons/copy.svg"}
+								alt="Copy icon"
+								width={18}
+								height={18}
+								className="opacity-60 hover:opacity-100"
+							/>
+							<span className="text-xs font-medium">{copied ? "Copied!" : "Copy"}</span>
+						</button>
+					)}
+				</div>
 			</div>
 		</div>
 	);

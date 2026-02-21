@@ -19,16 +19,34 @@ const MyProfile = () => {
 		data: initialPosts,
 		loading,
 		error,
+		page,
+		totalPages,
+		handleLoadMore,
 		refreshData,
 	} = usePromptList<Post>({
 		apiEndpoint: userId ? `/api/users/${userId}/posts` : "",
 	});
 
+	const {
+		data: initialLikedPosts,
+		loading: likedLoading,
+		page: likedPage,
+		totalPages: likedTotalPages,
+		handleLoadMore: handleLoadMoreLiked,
+	} = usePromptList<Post>({
+		apiEndpoint: userId ? `/api/users/${userId}/likes` : "",
+	});
+
 	const [myPosts, setMyPosts] = useState<Post[]>(initialPosts);
+	const [likedPosts, setLikedPosts] = useState<Post[]>(initialLikedPosts);
 
 	useEffect(() => {
 		setMyPosts(initialPosts);
 	}, [initialPosts]);
+
+	useEffect(() => {
+		setLikedPosts(initialLikedPosts);
+	}, [initialLikedPosts]);
 
 	const handleDelete = useCallback(
 		(postId: string, optimistic?: boolean) => {
@@ -47,7 +65,7 @@ const MyProfile = () => {
 		return `Welcome back, ${session?.user?.name || "Unknown"}`;
 	}, [session?.user?.name]);
 
-	if (loading) {
+	if (loading && likedLoading) {
 		return <Spinner />;
 	}
 	if (error) {
@@ -62,6 +80,13 @@ const MyProfile = () => {
 			name={session.user.name || "Unknown"}
 			desc={profileDescription}
 			data={myPosts}
+			likedData={likedPosts}
+			page={page}
+			totalPages={totalPages}
+			onLoadMore={handleLoadMore}
+			likedPage={likedPage}
+			likedTotalPages={likedTotalPages}
+			onLoadMoreLiked={handleLoadMoreLiked}
 			isCurrentUserProfile={true}
 			isProfilePage={true}
 			onDelete={handleDelete}
@@ -70,3 +95,4 @@ const MyProfile = () => {
 };
 
 export default MyProfile;
+
